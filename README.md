@@ -45,37 +45,93 @@ An API for an online bookstore allowing customers to create accounts, view a lis
 
 ```/bookstore-api
 │
+├── Dockerfile
+├── README.md
+├── docker-compose.yml
+├── go.mod
+├── go.sum
+├── sample.env
+├── otel-collector-config.yaml
+│
 ├── /cmd
+│   ├── /migrate
+│   │   └── main.go  # database migrations
+│   ├── /seed
+│   │   └── main.go  # data seeding
 │   └── /server
-│       └── main.go #main server
+│       └── main.go  # main server entry point
+│
+├── /config
+│   └── config.go  # application configuration
 │
 ├── /internal
-│   ├── /domain
-│   │   ├── /usecase #usecase interface
-│   │   ├── /repository #repository interface
-│   │   ├── /delivery #delivery interface
-│   │   └── /cache #cache interface
+│   ├── /delivery
+│   │   └── /http
+│   │       ├── handlers.go  # HTTP request handlers
+│   │       ├── routes.go  # route definitions
+│   │       └── /middleware
+│   │           ├── jwt.go  # JWT authentication middleware
+│   │           ├── otel.go  # OpenTelemetry integration
+│   │           └── panic.go  # panic recovery middleware
 │   │
-│   ├── /usecase #usecase implementation
-│   │   ├── /book
-│   │   ├── /order
-│   │   └── /user
+│   ├── /domain
+│   │   ├── /cache
+│   │   │   ├── book_cache.go  # book caching interface
+│   │   │   ├── customer_cache.go  # customer caching interface
+│   │   │   └── order_cache.go  # order caching interface
+│   │   ├── /delivery
+│   │   │   └── http.go  # delivery interface
+│   │   ├── /repository
+│   │   │   ├── book_repository.go  # book repository interface
+│   │   │   ├── order_repository.go  # order repository interface
+│   │   │   ├── repository.go  # common repository interface
+│   │   │   └── user_repository.go  # user repository interface
+│   │   └── /usecase
+│   │       ├── book_usecase.go  # book use case logic
+│   │       ├── order_usecase.go  # order use case logic
+│   │       └── user_usecase.go  # user use case logic
 │   │
 │   ├── /repository
-│   │   ├── /db #database implementation
+│   │   ├── /cache
+│   │   │   └── /redis
+│   │   │       ├── book_cache.go  # Redis book cache implementation
+│   │   │       ├── customer_cache.go  # Redis customer cache implementation
+│   │   │       └── order_cache.go  # Redis order cache implementation
+│   │   ├── /db
 │   │   │   └── /postgresql
-│   │   └── /cache #cache implementation
-│   │       └── /redis
+│   │   │       ├── book_repository.go  # PostgreSQL book repository
+│   │   │       ├── order_item_repository.go  # PostgreSQL order item repository
+│   │   │       ├── order_repository.go  # PostgreSQL order repository
+│   │   │       ├── postgresql.go  # common PostgreSQL setup
+│   │   │       ├── repository.go  # common repository implementation
+│   │   │       └── user_repository.go  # PostgreSQL user repository
+│   │   └── /search
+│   │       └── /elasticsearch
+│   │           └── search.go  # Elasticsearch search implementation
 │   │
-│   └── /delivery #delivery implementation
-│       └── /http
+│   └── /usecase
+│       ├── /book
+│       │   └── book.go  # book use case implementation
+│       ├── /order
+│       │   └── order.go  # order use case implementation
+│       └── /user
+│           └── user.go  # user use case implementation
 │
-├── /middleware #middleware
-│   ├── jwt.go
-│   └── tracing.go
+├── /migrations  # SQL migration files
+│   ├── 1_create_users_table.up.sql
+│   ├── 1_create_users_table.down.sql
+│   ├── 2_create_books_table.up.sql
+│   ├── 2_create_books_table.down.sql
+│   ├── 3_create_orders_table.up.sql
+│   ├── 3_create_orders_table.down.sql
+│   ├── 4_create_order_items_table.up.sql
+│   └── 4_create_order_items_table.down.sql
 │
-└── /config
-    └── config.go
+└── /utils
+    ├── db.go  # database utility functions
+    ├── errors.go  # error handling utilities
+    ├── jwt.go  # JWT utility functions
+    └── tracer.go  # tracing utility functions
 ```
 ---
 
