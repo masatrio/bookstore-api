@@ -186,7 +186,12 @@ CREATE TABLE order_items (
     git clone https://github.com/masatrio/bookstore-api.git
     ```
 
-2. **Setup Docker**: Ensure Docker and Docker Compose are installed. Then run:
+2. **Prepare ENV**: Prepare the env by creating .env file, or copy the sample.env
+    ```bash
+    mv sample.env .env
+    ```
+
+3. **Setup Docker**: Ensure Docker and Docker Compose are installed. Then run:
     ```bash
     docker-compose up --build
     ```
