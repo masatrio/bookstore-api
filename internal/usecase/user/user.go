@@ -4,6 +4,7 @@ import (
 	"context"
 	"time"
 
+	"github.com/masatrio/bookstore-api/config"
 	"github.com/masatrio/bookstore-api/internal/domain/repository"
 	"github.com/masatrio/bookstore-api/internal/domain/usecase"
 	"github.com/masatrio/bookstore-api/utils"
@@ -56,7 +57,7 @@ func (u *userUseCase) Register(ctx context.Context, input usecase.RegisterInput)
 		return nil, utils.NewCustomSystemError("Database Error")
 	}
 
-	token, err := utils.GenerateJWT(userID, input.Email)
+	token, err := utils.GenerateJWT(userID, input.Email, config.LoadConfig().JWT.Secret, config.LoadConfig().JWT.Expiry)
 	if err != nil {
 		span.RecordError(err)
 		return nil, utils.NewCustomSystemError("System Error")
@@ -94,7 +95,7 @@ func (u *userUseCase) Login(ctx context.Context, input usecase.LoginInput) (*use
 		return nil, utils.NewCustomUserError("invalid email or password")
 	}
 
-	token, err := utils.GenerateJWT(user.ID, user.Email)
+	token, err := utils.GenerateJWT(user.ID, user.Email, config.LoadConfig().JWT.Secret, config.LoadConfig().JWT.Expiry)
 	if err != nil {
 		span.RecordError(err)
 		return nil, utils.NewCustomSystemError("System Error")

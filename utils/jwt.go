@@ -4,7 +4,6 @@ import (
 	"time"
 
 	"github.com/dgrijalva/jwt-go"
-	"github.com/masatrio/bookstore-api/config"
 )
 
 type Claims struct {
@@ -14,9 +13,8 @@ type Claims struct {
 }
 
 // GenerateJWT generates a JWT token for the given user ID and email.
-func GenerateJWT(userID int64, email string) (string, error) {
-	secretKey := config.LoadConfig().JWT.Secret
-	expirationTime := time.Now().Add(24 * time.Hour)
+func GenerateJWT(userID int64, email, secret string, expiryHours int) (string, error) {
+	expirationTime := time.Now().Add(time.Duration(expiryHours) * time.Hour)
 
 	claims := &Claims{
 		UserID: userID,
@@ -27,5 +25,5 @@ func GenerateJWT(userID int64, email string) (string, error) {
 	}
 
 	token := jwt.NewWithClaims(jwt.SigningMethodHS256, claims)
-	return token.SignedString([]byte(secretKey))
+	return token.SignedString([]byte(secret))
 }
