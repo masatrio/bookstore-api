@@ -191,17 +191,7 @@ CREATE TABLE order_items (
     docker-compose up --build
     ```
 
-3. **Run Migrations**: The project includes a database migration tool for PostgreSQL:
-    ```bash
-    go run cmd/migrate/main.go
-    ```
-
-4. **Run the Application**:
-    ```bash
-    go run cmd/server/main.go
-    ```
-
-5. **Access API Documentation**: 
+3. **Access API Documentation**: 
    Visit [https://app.swaggerhub.com/apis/masatrio/bookstore-api/1.0.0](#https://app.swaggerhub.com/apis/masatrio/bookstore-api/1.0.0) to access Swagger API documentation.
 
 ---
