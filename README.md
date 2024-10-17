@@ -29,7 +29,8 @@ An API for an online bookstore allowing customers to create accounts, view a lis
 
 - **Programming Language**: `Golang`
 - **Database**: `PostgreSQL`
-- **Cache**: `Redis`
+- **Cache**: `Redis` ( not yet implemented )
+- **Search**: `Elasticsearch` ( not yet implemented )
 - **Observability Framework**: `Open Telemetry`
 
 ---
@@ -58,7 +59,7 @@ An API for an online bookstore allowing customers to create accounts, view a lis
 │   ├── /usecase #usecase implementation
 │   │   ├── /book
 │   │   ├── /order
-│   │   └── /customer
+│   │   └── /user
 │   │
 │   ├── /repository
 │   │   ├── /db #database implementation
@@ -86,7 +87,8 @@ CREATE TABLE users (
     name VARCHAR(255) NOT NULL,
     email VARCHAR(255) UNIQUE NOT NULL,
     password VARCHAR(255) NOT NULL,
-    created_at TIMESTAMP DEFAULT CURRENT_TIMESTAMP
+    created_at TIMESTAMP DEFAULT CURRENT_TIMESTAMP,
+    updated_at TIMESTAMP DEFAULT CURRENT_TIMESTAMP ON UPDATE CURRENT_TIMESTAMP
 );
 ```
 - **Books Table**
@@ -104,9 +106,10 @@ CREATE TABLE books (
 ```sql
 CREATE TABLE orders (
     id SERIAL PRIMARY KEY,
-    customer_id INT NOT NULL,
+    user_id INT NOT NULL,
     status VARCHAR(50) NOT NULL,
-    created_at TIMESTAMP DEFAULT CURRENT_TIMESTAMP
+    created_at TIMESTAMP DEFAULT CURRENT_TIMESTAMP,
+    updated_at TIMESTAMP DEFAULT CURRENT_TIMESTAMP ON UPDATE CURRENT_TIMESTAMP
 );
 ```
 - **OrderItems Table**
@@ -134,12 +137,12 @@ CREATE TABLE order_items (
 
 3. **Run Migrations**: The project includes a database migration tool for PostgreSQL:
     ```bash
-    make migrate-up
+    go run cmd/migrate/main.go
     ```
 
 4. **Run the Application**:
     ```bash
-    go run main.go
+    go run cmd/server/main.go
     ```
 
 5. **Access API Documentation**: 

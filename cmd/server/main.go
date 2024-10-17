@@ -16,22 +16,26 @@ import (
 )
 
 func main() {
-	ctx := context.Background()
+	ctx, cancel := context.WithCancel(context.Background())
+	defer cancel()
 
 	// Load the application configuration
 	cfg := config.LoadConfig()
 
 	tracer := utils.NewTracer(ctx, cfg.Server.ServiceName)
 
-	router := handler.InitRoutes(tracer)
-	ServeHTTP(router, cfg.Server.Port)
+	router := handler.InitAPP(cfg, tracer)
+	ServeHTTP(router, *cfg)
 }
 
 // ServeHTTP serve HTTP API gracefully
-func ServeHTTP(router http.Handler, port int) {
+func ServeHTTP(router http.Handler, config config.Config) {
 	srv := &http.Server{
-		Addr:    toPort(port),
-		Handler: router,
+		Addr:         toPort(config.Server.Port),
+		Handler:      router,
+		ReadTimeout:  time.Duration(config.Server.ReadTimeout) * time.Second,
+		WriteTimeout: time.Duration(config.Server.WriteTimeout) * time.Second,
+		IdleTimeout:  time.Duration(config.Server.IdleTimeout) * time.Second,
 	}
 
 	stop := make(chan os.Signal, 1)

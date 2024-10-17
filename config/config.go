@@ -10,10 +10,13 @@ import (
 )
 
 type ServerConfig struct {
-	Port        int
-	ServiceName string
-	LogLevel    string
-	Tracing     bool
+	Port         int
+	ServiceName  string
+	LogLevel     string
+	Tracing      bool
+	ReadTimeout  int // in seconds
+	WriteTimeout int // in seconds
+	IdleTimeout  int // in seconds
 }
 
 type JWTConfig struct {
@@ -29,10 +32,17 @@ type DatabaseConfig struct {
 	Timeout             int // in seconds
 }
 
+type RedisConfig struct {
+	URL      string
+	Password string
+	DB       int
+}
+
 type Config struct {
 	Server   ServerConfig
 	JWT      JWTConfig
 	Database DatabaseConfig
+	Redis    RedisConfig
 }
 
 var cfg *Config
@@ -41,13 +51,11 @@ var once sync.Once
 // LoadConfig loads the configuration from the .env file and ensures it's only loaded once.
 func LoadConfig() *Config {
 	once.Do(func() {
-		// Load .env file
 		err := godotenv.Load()
 		if err != nil {
 			log.Fatalf("Error loading .env file: %v", err)
 		}
 
-		// Load server config
 		portStr := os.Getenv("PORT")
 		if portStr == "" {
 			panic("PORT environment variable is not set")
@@ -75,8 +83,13 @@ func LoadConfig() *Config {
 
 		tracing, err := strconv.ParseBool(tracingStr)
 		if err != nil {
-			tracing = false // Default to false if there's an error
+			tracing = false
 		}
+
+		// Load read, write, and idle timeouts from environment variables
+		readTimeout := getEnvAsInt("SERVER_READ_TIMEOUT", 5)
+		writeTimeout := getEnvAsInt("SERVER_WRITE_TIMEOUT", 10)
+		idleTimeout := getEnvAsInt("SERVER_IDLE_TIMEOUT", 60)
 
 		// Load JWT config
 		jwtSecret := os.Getenv("JWT_SECRET")
@@ -105,10 +118,10 @@ func LoadConfig() *Config {
 		maxIdleTimeStr := os.Getenv("DB_MAX_IDLE_TIME")
 		timeoutStr := os.Getenv("DB_TIMEOUT")
 
-		maxIdleConnection := 10    // Default value
-		maxActiveConnection := 100 // Default value
-		maxIdleTime := 60          // Default value in seconds
-		timeout := 30              // Default value in seconds
+		maxIdleConnection := 10
+		maxActiveConnection := 100
+		maxIdleTime := 60
+		dbTimeout := 30
 
 		if maxIdleConnStr != "" {
 			var err error
@@ -136,18 +149,39 @@ func LoadConfig() *Config {
 
 		if timeoutStr != "" {
 			var err error
-			timeout, err = strconv.Atoi(timeoutStr)
+			dbTimeout, err = strconv.Atoi(timeoutStr)
 			if err != nil {
 				panic("Invalid DB_TIMEOUT environment variable: must be an integer")
 			}
 		}
 
+		// Load Redis config
+		redisURL := os.Getenv("REDIS_URL")
+		if redisURL == "" {
+			panic("REDIS_URL environment variable is not set")
+		}
+
+		redisPassword := os.Getenv("REDIS_PASSWORD")
+		redisDBStr := os.Getenv("REDIS_DB")
+		redisDB := 0
+
+		if redisDBStr != "" {
+			var err error
+			redisDB, err = strconv.Atoi(redisDBStr)
+			if err != nil {
+				panic("Invalid REDIS_DB environment variable: must be an integer")
+			}
+		}
+
 		cfg = &Config{
 			Server: ServerConfig{
-				Port:        port,
-				ServiceName: serviceName,
-				LogLevel:    logLevel,
-				Tracing:     tracing,
+				Port:         port,
+				ServiceName:  serviceName,
+				LogLevel:     logLevel,
+				Tracing:      tracing,
+				ReadTimeout:  readTimeout,
+				WriteTimeout: writeTimeout,
+				IdleTimeout:  idleTimeout,
 			},
 			JWT: JWTConfig{
 				Secret: jwtSecret,
@@ -158,10 +192,29 @@ func LoadConfig() *Config {
 				MaxIdleConnection:   maxIdleConnection,
 				MaxActiveConnection: maxActiveConnection,
 				MaxIdleTime:         maxIdleTime,
-				Timeout:             timeout,
+				Timeout:             dbTimeout,
+			},
+			Redis: RedisConfig{
+				URL:      redisURL,
+				Password: redisPassword,
+				DB:       redisDB,
 			},
 		}
 	})
 
 	return cfg
+}
+
+// Helper function to read environment variable as integer with a fallback default
+func getEnvAsInt(name string, defaultValue int) int {
+	valueStr := os.Getenv(name)
+	if valueStr == "" {
+		return defaultValue
+	}
+	value, err := strconv.Atoi(valueStr)
+	if err != nil {
+		log.Printf("Invalid value for %s, using default %d", name, defaultValue)
+		return defaultValue
+	}
+	return value
 }

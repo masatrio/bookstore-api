@@ -5,18 +5,27 @@ import (
 	"log"
 
 	"go.opentelemetry.io/otel"
-	"go.opentelemetry.io/otel/exporters/otlp/otlptrace/otlptracehttp"
+	"go.opentelemetry.io/otel/exporters/otlp/otlptrace"
+	"go.opentelemetry.io/otel/exporters/otlp/otlptrace/otlptracegrpc"
 	"go.opentelemetry.io/otel/sdk/resource"
 	"go.opentelemetry.io/otel/sdk/trace"
-	semconv "go.opentelemetry.io/otel/semconv/v1.7.0"
+	semconv "go.opentelemetry.io/otel/semconv/v1.4.0"
 	tracer "go.opentelemetry.io/otel/trace"
 )
 
 // NewTracer creates and returns a new OpenTelemetry tracer.
 func NewTracer(ctx context.Context, serviceName string) tracer.Tracer {
-	exporter, err := otlptracehttp.New(ctx)
+	exporter, err := otlptrace.New(
+		ctx,
+		otlptracegrpc.NewClient(
+			otlptracegrpc.WithEndpoint("otel-collector:4317"),
+			otlptracegrpc.WithInsecure(),
+		),
+	)
+
 	if err != nil {
-		log.Fatalf("failed to create OTLP HTTP trace exporter: %v", err)
+		log.Printf("failed to create OTLP trace exporter: %v", err)
+		return nil
 	}
 
 	res, err := resource.New(
