@@ -136,7 +136,7 @@ An API for an online bookstore allowing customers to create accounts, view a lis
 ---
 
 ## **Database Schemas**
-- **Customers Table**
+- **Users Table**
 ```sql
 CREATE TABLE users (
     id SERIAL PRIMARY KEY,
@@ -210,6 +210,9 @@ CREATE TABLE order_items (
 
 Run the tests with the following command:
 ```bash
+mockgen -source=./internal/domain/usecase/user_usecase.go -destination=./internal/domain/usecase/mocks/user_usecase_mock.go -package=mocks
+mockgen -source=./internal/domain/usecase/book_usecase.go -destination=./internal/domain/usecase/mocks/book_usecase_mock.go -package=mocks
+mockgen -source=./internal/domain/usecase/order_usecase.go -destination=./internal/domain/usecase/mocks/order_usecase_mock.go -package=mocks
 go test ./...
 ```
 ---
